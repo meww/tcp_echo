@@ -47,12 +47,24 @@ int main(int argc, char *argv[])
         if (fgets(echo.msg, sizeof echo.msg, stdin) == NULL) {
             break;
         }
-        write(s, &echo, sizeof echo);
-        if ((n = read(s, &echo, sizeof echo)) < 0) {
-            perror("read");
+        echo.msg[strlen(echo.msg) - 1] = '\0';
+        if ((strcmp(echo.msg, "FIN")) == 0) {
+            printf("Finished\n");
+            break;
+        }
+        if ((n = send(s, &echo, sizeof echo, 0)) < 0) {
+            perror("send");
+            exit(1);
+        }
+        if ((n = recv(s, &echo, sizeof echo, 0)) < 0) {
+            perror("recv");
             exit(1);
         }
         printf("seq: %d msg: %s\n", echo.seq, echo.msg);
+        if (echo.seq == 10) {
+            printf("Finished\n");
+            break;
+        }
     }
     close(s);
 

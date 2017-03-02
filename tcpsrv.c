@@ -51,10 +51,18 @@ int main(int argc, char *argv[])
             perror("accept");
             exit(1);
         }
-        n = read(s2, &echo, sizeof echo);
-        printf("%s\n", echo.msg);
-        echo.seq++;
-        write(s2, &echo, sizeof echo);
+        for(;;) {
+            if ((n = recv(s2, &echo, sizeof echo, 0)) < 0) {
+                perror("recv");
+                exit(1);
+            }
+            printf("%s", echo.msg);
+            echo.seq++;
+            if ((n = send(s2, &echo, sizeof echo, 0)) < 0) {
+                perror("send");
+                exit(1);
+            }
+        }
         close(s2);
     }
     close(s);
