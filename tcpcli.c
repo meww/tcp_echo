@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     struct msg_echo echo;
     struct sockaddr_in servskt;
     in_port_t myport;
+    socklen_t servlen;
     
     if (argc != 3) {
         fprintf(stderr, "Usage: ./udpcli localhost port\n");
@@ -48,10 +49,7 @@ int main(int argc, char *argv[])
             break;
         }
         echo.msg[strlen(echo.msg) - 1] = '\0';
-        if ((strcmp(echo.msg, "FIN")) == 0) {
-            printf("Finished\n");
-            break;
-        }
+        servlen = sizeof servskt;
         if ((n = send(s, &echo, sizeof echo, 0)) < 0) {
             perror("send");
             exit(1);
@@ -61,6 +59,10 @@ int main(int argc, char *argv[])
             exit(1);
         }
         printf("seq: %d msg: %s\n", echo.seq, echo.msg);
+        if ((strcmp(echo.msg, "FIN")) == 0) {
+            printf("Finished\n");
+            break;
+        }
         if (echo.seq == 10) {
             printf("Finished\n");
             break;

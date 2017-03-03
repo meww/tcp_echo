@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 struct msg_echo {
     unsigned short seq;
@@ -16,6 +17,7 @@ struct msg_echo {
 int main(int argc, char *argv[])
 {
     int s, s2, n;
+    pid_t pid;
     socklen_t recvlen;
     in_port_t myport;
     struct sockaddr_in servskt, recvskt;
@@ -51,17 +53,30 @@ int main(int argc, char *argv[])
             perror("accept");
             exit(1);
         }
-        for(;;) {
-            if ((n = recv(s2, &echo, sizeof echo, 0)) < 0) {
-                perror("recv");
-                exit(1);
+
+        pid = fork();
+        if (pid < 0) {
+            perror("fork");
+            exit(1);
+        } else if (pid == 0) {
+            for(;;) {
+                if ((n = recv(s2, &echo, sizeof echo, 0)) < 0) {
+                    perror("recv");
+                    exit(1);
+                }
+                printf("%s\n", echo.msg);
+                echo.seq++;
+                if ((n = send(s2, &echo, sizeof echo, 0)) < 0) {
+                    perror("send");
+                    exit(1);
+                }
+                if (strcmp(echo.msg, "FIN") == 0 || echo.seq == 10) {
+                    printf("Finished\n");
+                    break;
+                }
             }
-            printf("%s", echo.msg);
-            echo.seq++;
-            if ((n = send(s2, &echo, sizeof echo, 0)) < 0) {
-                perror("send");
-                exit(1);
-            }
+            close(s2);
+            exit(1);
         }
         close(s2);
     }
