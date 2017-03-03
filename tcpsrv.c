@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
                 if (strcmp(echo.msg, "FIN") == 0 || echo.seq == 10) {
-                    printf("Finished\n");
                     break;
                 }
             }
